@@ -38,10 +38,14 @@ body {
   color: var(--text);
   font-family: var(--font-mono);
   font-size: 14px;
-  min-height: 100vh;
+  min-height: 100dvh;
   padding: 20px 16px 100px;
   max-width: 640px;
   margin: 0 auto;
+}
+:focus-visible { outline: 2px solid var(--today); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
 /* ── SYNC STATUS ── */
@@ -145,6 +149,32 @@ body {
   display: none;
   letter-spacing: 0.03em;
   line-height: 1.6;
+  position: relative;
+}
+/* #22: dismiss button */
+.day-banner-close {
+  position: absolute; top: 10px; right: 12px;
+  background: none; border: none; color: var(--today);
+  cursor: pointer; font-size: 14px; padding: 2px 6px;
+  opacity: 0.7; line-height: 1;
+}
+.day-banner-close:hover { opacity: 1; }
+
+/* #12: filter active indicator strip */
+.filter-indicator {
+  font-size: 11px; color: var(--muted);
+  margin-bottom: 10px; margin-top: -6px;
+  letter-spacing: 0.04em;
+  display: none;
+}
+.filter-indicator.visible { display: block; }
+
+/* #26: undo toast — toast with action link */
+.toast-action {
+  display: inline-block; margin-left: 10px;
+  color: var(--today); cursor: pointer;
+  text-decoration: underline; font-weight: 500;
+  pointer-events: auto;
 }
 
 /* ── SECTION ── */
@@ -244,6 +274,8 @@ body {
   cursor: text;
   display: block;
   caret-color: var(--today);
+  white-space: pre-wrap; /* allow wrap but no deliberate newlines */
+  overflow-wrap: break-word;
 }
 .task-text.done { color: var(--done-text); text-decoration: line-through; }
 .task-text.carried { color: var(--carried); }
@@ -333,10 +365,10 @@ body {
   color: var(--muted);
   touch-action: manipulation;
 }
-.prio-btn.active-p1 { background: rgba(240,144,106,0.1); border-color: var(--priority-high); color: var(--priority-high); }
-.prio-btn.active-p2 { background: rgba(240,200,106,0.1); border-color: var(--priority-med); color: var(--priority-med); }
-.prio-btn.active-p3 { background: rgba(106,184,240,0.1); border-color: var(--priority-low); color: var(--priority-low); }
-.prio-btn.active-none { background: var(--surface2); border-color: var(--border2); color: var(--text2); }
+.prio-btn.active-p1 { background: rgba(240,144,106,0.18); border: 2px solid var(--priority-high); color: var(--priority-high); font-weight: 500; }
+.prio-btn.active-p2 { background: rgba(240,200,106,0.18); border: 2px solid var(--priority-med); color: var(--priority-med); font-weight: 500; }
+.prio-btn.active-p3 { background: rgba(106,184,240,0.18); border: 2px solid var(--priority-low); color: var(--priority-low); font-weight: 500; }
+.prio-btn.active-none { background: var(--surface2); border: 2px solid var(--border2); color: var(--text2); font-weight: 500; }
 
 /* ── EMPTY STATE ── */
 .empty-state { padding: 24px 16px; text-align: center; color: var(--muted); font-size: 12px; }
@@ -532,27 +564,77 @@ body {
 }
 .stat-num { font-size: 22px; font-weight: 500; color: var(--text); font-family: var(--font-serif); font-style: italic; }
 .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+/* ── DATE OVERRIDE BAR (test panel) ── */
+.date-override-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: rgba(240,200,106,0.07);
+  border: 1px solid rgba(240,200,106,0.22);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-bottom: 16px;
+}
+.date-override-label {
+  font-size: 11px;
+  color: var(--priority-med);
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+.date-override-input {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 5px 8px;
+  outline: none;
+  flex: 1;
+  min-width: 130px;
+  color-scheme: dark;
+}
+.date-override-input:focus { border-color: var(--priority-med); }
+.date-override-btn {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(240,200,106,0.3);
+  background: transparent;
+  color: var(--priority-med);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.date-override-btn.reset { color: var(--muted); border-color: var(--border2); }
+.date-override-btn:active { transform: scale(0.93); }
+.date-override-status {
+  font-size: 11px;
+  color: var(--priority-med);
+  flex-shrink: 0;
+}
+.date-override-active .date-override-bar {
+  background: rgba(240,200,106,0.13);
+  border-color: rgba(240,200,106,0.4);
+}
 </style>
 </head>
 <body>
 
-<!-- USER SETUP -->
-<div class="setup-modal" id="setup-modal">
-  <div class="setup-title">🧠 Mind Todo</div>
-  <div class="setup-sub">Enter a username to sync your tasks across all devices in real-time.</div>
-  <input class="setup-input" id="setup-username" placeholder="your-name" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="30"/>
-  <button class="setup-btn" onclick="startWithUsername()">Start syncing →</button>
-  <div class="setup-orline">tasks sync instantly across all your devices</div>
-</div>
-
 <!-- MAIN APP -->
-<div id="app" style="display:none">
+<div id="app">
 
-<!-- SYNC STATUS -->
-<div class="sync-bar">
-  <div class="sync-dot" id="sync-dot"></div>
-  <span id="sync-label">connecting…</span>
-  <span style="margin-left:auto;color:var(--muted)" id="username-label"></span>
+<!-- DATE OVERRIDE (TEST PANEL) -->
+<div class="date-override-bar" id="date-override-bar">
+  <span class="date-override-label">🧪 Test date</span>
+  <input type="date" id="date-override-input" class="date-override-input" title="Override today's date for testing"/>
+  <button class="date-override-btn" onclick="applyDateOverride()" title="Apply">Apply</button>
+  <button class="date-override-btn reset" onclick="resetDateOverride()" title="Reset to real today">Reset</button>
+  <span id="date-override-status" class="date-override-status"></span>
 </div>
 
 <!-- HEADER -->
@@ -562,14 +644,14 @@ body {
     <div class="clock" id="clock-display"></div>
   </div>
   <div class="header-actions">
-    <button class="icon-btn" onclick="toggleSearch()" title="Search">🔍</button>
-    <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
+    <button class="icon-btn" onclick="toggleSearch()" title="Search" aria-label="Search tasks">🔍</button>
+    <button class="icon-btn" onclick="openSettings()" title="Settings" aria-label="Open settings">⚙️</button>
   </div>
 </div>
 
 <!-- SEARCH -->
 <div class="search-wrap" id="search-wrap">
-  <input class="search-input" id="search-input" placeholder="Search tasks…" oninput="renderAll()" autocomplete="off"/>
+  <input class="search-input" id="search-input" placeholder="Search tasks…" oninput="onSearchInput()" autocomplete="off"/>
 </div>
 
 <!-- FILTER CHIPS -->
@@ -602,7 +684,13 @@ body {
 </div>
 
 <!-- DAY BANNER -->
-<div class="day-banner" id="day-banner">✦ New day — tomorrow's tasks moved to today. Unfinished tasks carried over.</div>
+<div class="day-banner" id="day-banner">
+  ✦ New day — tomorrow's tasks moved to today. Unfinished tasks carried over.
+  <button class="day-banner-close" onclick="dismissBanner()" aria-label="Dismiss">✕</button>
+</div>
+
+<!-- FILTER INDICATOR -->
+<div class="filter-indicator" id="filter-indicator"></div>
 
 <!-- TODAY SECTION -->
 <div class="section">
@@ -654,7 +742,7 @@ body {
 <div id="prev-sections"></div>
 
 <!-- FAB -->
-<button class="fab" onclick="focusTodayInput()">+</button>
+<button class="fab" onclick="focusTodayInput()" aria-label="Add task to today">+</button>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -672,7 +760,6 @@ body {
       <button class="modal-btn" onclick="clearAllDays()">🧹 Clear old days</button>
     </div>
     <div class="modal-row">
-      <button class="modal-btn danger" onclick="switchUser()">🔄 Switch user</button>
       <button class="modal-btn" onclick="closeSettings()">Close</button>
     </div>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)"/>
@@ -681,35 +768,23 @@ body {
 
 </div><!-- /app -->
 
-<!-- Firebase SDK -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-// ── FIREBASE CONFIG ──
-const firebaseConfig = {
-  apiKey: "AIzaSyAFyY_o0rozaonmK7cx3JXbVQWMKBaa9B0",
-  authDomain: "to-do-62245.firebaseapp.com",
-  projectId: "to-do-62245",
-  storageBucket: "to-do-62245.firebasestorage.app",
-  messagingSenderId: "813188482191",
-  appId: "1:813188482191:web:40e3de70c45fc7fae39cfa"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+<script>
+// ── LOCAL STORAGE ONLY (Firebase removed for testing) ──
+const LS_KEY = 'mind_todo_local_data';
 
 // ── GLOBALS ──
-let currentUsername = null;
-let unsubscribe = null;
 let localData = {};
 let currentFilter = 'all';
 let pendingPriority = { today: null, tomorrow: null };
-let isSaving = false;
-let saveQueue = null;
+// Date override for testing — null means use real Date
+let _dateOverride = null;
+// rollover guard
+let rolloverDone = false;
 
 // ── UTILS ──
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+// Returns the "effective today" — real date or override
+function effectiveNow() { return _dateOverride ? new Date(_dateOverride + 'T12:00:00') : new Date(); }
 function getDateKey(d) { return d.toISOString().split('T')[0]; }
 function formatDate(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
@@ -722,62 +797,36 @@ function showToast(msg, duration = 2000) {
   clearTimeout(t._timer);
   t._timer = setTimeout(() => t.classList.remove('show'), duration);
 }
-function setSyncStatus(state) {
-  const dot = document.getElementById('sync-dot');
-  const label = document.getElementById('sync-label');
-  dot.className = 'sync-dot ' + state;
-  label.textContent = state === 'synced' ? 'synced' : state === 'syncing' ? 'saving…' : state === 'error' ? 'offline' : 'connecting…';
+// ── SAVE / LOAD (localStorage) ──
+function saveData() {
+  localStorage.setItem(LS_KEY, JSON.stringify(localData));
+}
+function loadData() {
+  const raw = localStorage.getItem(LS_KEY);
+  return raw ? JSON.parse(raw) : null;
 }
 
-// ── USER SETUP ──
-window.startWithUsername = async function() {
-  const val = document.getElementById('setup-username').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g,'');
-  if (!val || val.length < 2) { showToast('Enter at least 2 characters'); return; }
-  localStorage.setItem('todo_mind_username', val);
-  await initUser(val);
-};
-
-window.switchUser = function() {
-  if (unsubscribe) unsubscribe();
-  localStorage.removeItem('todo_mind_username');
-  closeSettings();
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('setup-modal').classList.remove('hidden');
-  document.getElementById('setup-username').value = '';
-};
-
-async function initUser(username) {
-  currentUsername = username;
-  document.getElementById('username-label').textContent = '@' + username;
-  document.getElementById('setup-modal').classList.add('hidden');
+// ── INIT ──
+function initApp() {
+  const saved = loadData();
+  localData = saved || buildDefaultData();
   document.getElementById('app').style.display = 'block';
-  setSyncStatus('connecting');
-
-  const docRef = doc(db, 'users', username);
-
-  // Listen for real-time updates
-  unsubscribe = onSnapshot(docRef, (snap) => {
-    if (snap.exists()) {
-      localData = snap.data();
-    } else {
-      localData = buildDefaultData();
-    }
-    runDayRollover();
-    renderAll();
-    setSyncStatus('synced');
-  }, (err) => {
-    console.error(err);
-    setSyncStatus('error');
-    showToast('Offline — changes saved locally');
-  });
-
+  rolloverDone = false;
+  runDayRollover();
+  renderAll();
   updateClock();
   setInterval(updateClock, 30000);
 }
 
+// ── USER SETUP ──
+// Kept as stubs — username flow removed, no-op
+window.startWithUsername = function() { initApp(); };
+window.switchUser = function() { closeSettings(); };
+
 function buildDefaultData() {
-  const todayKey = getDateKey(new Date());
-  const tomorrowKey = getDateKey(new Date(Date.now() + 86400000));
+  const now = effectiveNow();
+  const todayKey = getDateKey(now);
+  const tomorrowKey = getDateKey(new Date(now.getTime() + 86400000));
   return {
     days: {
       [todayKey]: { tasks: [] },
@@ -792,62 +841,80 @@ function buildDefaultData() {
   };
 }
 
-// ── SAVE TO FIREBASE ──
-async function saveData() {
-  if (!currentUsername) return;
-  if (isSaving) { saveQueue = true; return; }
-  isSaving = true;
-  setSyncStatus('syncing');
-  try {
-    const docRef = doc(db, 'users', currentUsername);
-    await setDoc(docRef, localData);
-    setSyncStatus('synced');
-  } catch(e) {
-    setSyncStatus('error');
-    showToast('Save failed — retrying…');
-    setTimeout(saveData, 3000);
-  } finally {
-    isSaving = false;
-    if (saveQueue) { saveQueue = false; saveData(); }
-  }
-}
+// (saveData is defined above as localStorage version)
 
 // ── DAY ROLLOVER ──
 function runDayRollover() {
-  const todayKey = getDateKey(new Date());
-  const tomorrowKey = getDateKey(new Date(Date.now() + 86400000));
+  if (rolloverDone) return; // guard: run at most once per session/override
+  rolloverDone = true;
+
+  const now = effectiveNow();
+  const todayKey = getDateKey(now);
+  const tomorrowKey = getDateKey(new Date(now.getTime() + 86400000));
 
   if (!localData.days) localData.days = {};
   if (!localData.days[todayKey]) localData.days[todayKey] = { tasks: [] };
   if (!localData.days[tomorrowKey]) localData.days[tomorrowKey] = { tasks: [] };
 
-  if (localData.lastSeenDay && localData.lastSeenDay !== todayKey) {
-    const yesterday = getDateKey(new Date(Date.now() - 86400000));
-    localData.streak = localData.lastSeenDay === yesterday ? (localData.streak || 0) + 1 : 1;
+  const lastSeen = localData.lastSeenDay || '';
 
-    const prevTasks = (localData.days[localData.lastSeenDay]?.tasks || []).filter(t => !t.done);
-    prevTasks.forEach(t => localData.days[todayKey].tasks.unshift({ ...t, id: uid(), carried: true }));
+  if (lastSeen && lastSeen !== todayKey) {
+    // A new day has passed — run the full rollover
+    const yesterday = getDateKey(new Date(now.getTime() - 86400000));
+    localData.streak = lastSeen === yesterday ? (localData.streak || 0) + 1 : 1;
 
+    // FIX 6: deduplicate carried tasks by checking existing task texts
+    const existingTexts = new Set((localData.days[todayKey].tasks || []).map(t => t.text));
+
+    // Carry unfinished tasks from the last seen day
+    const prevTasks = (localData.days[lastSeen]?.tasks || []).filter(t => !t.done);
+    prevTasks.forEach(t => {
+      if (!existingTexts.has(t.text)) {
+        localData.days[todayKey].tasks.unshift({ ...t, id: uid(), carried: true, sourceDay: lastSeen, sourceId: t.id });
+        existingTexts.add(t.text);
+      }
+    });
+
+    // FIX 2: move yesterday's tomorrow → today.
+    // lastTomorrowKey might equal todayKey (if exactly one day passed) — handle both cases.
     const oldTmrwKey = localData.lastTomorrowKey || '';
-    if (oldTmrwKey && localData.days[oldTmrwKey]?.tasks?.length) {
-      localData.days[oldTmrwKey].tasks.forEach(t => localData.days[todayKey].tasks.push({ ...t, id: uid(), carried: false }));
+    // The old tomorrow tasks to move: prefer oldTmrwKey bucket, but if it IS todayKey
+    // those tasks are already there (written by buildDefaultData or a previous partial rollover).
+    // Only clear and move if oldTmrwKey is a different key that still has tasks.
+    if (oldTmrwKey && oldTmrwKey !== todayKey && localData.days[oldTmrwKey]?.tasks?.length) {
+      localData.days[oldTmrwKey].tasks.forEach(t => {
+        if (!existingTexts.has(t.text)) {
+          localData.days[todayKey].tasks.push({ ...t, id: uid(), carried: false });
+          existingTexts.add(t.text);
+        }
+      });
       localData.days[oldTmrwKey] = { tasks: [] };
     }
 
     localData.lastSeenDay = todayKey;
-    localData.dayChanged = true;
     localData.lastTomorrowKey = tomorrowKey;
+    // FIX 3: dayChanged is set to true here and will be cleared after the banner is shown
+    localData.dayChanged = true;
+    // FIX 4 + 5: saveData() is called once here; isSaving flag prevents snapshot loop
     saveData();
   } else {
+    // No day change — just keep lastSeenDay and lastTomorrowKey current
+    // FIX 5: save these even in the else branch so next load sees the right values
+    const needsSave = (localData.lastSeenDay !== todayKey) || (localData.lastTomorrowKey !== tomorrowKey);
     localData.lastSeenDay = todayKey;
     localData.lastTomorrowKey = tomorrowKey;
+    if (needsSave) saveData();
   }
 }
 
 // ── RENDER ──
 window.renderAll = function() {
-  const todayKey = getDateKey(new Date());
-  const tomorrowKey = getDateKey(new Date(Date.now() + 86400000));
+  // #15: remember focused element to restore after re-render
+  const focusedId = document.activeElement?.dataset?.taskId;
+
+  const now = effectiveNow();
+  const todayKey = getDateKey(now);
+  const tomorrowKey = getDateKey(new Date(now.getTime() + 86400000));
   const q = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
 
   document.getElementById('today-heading').textContent = '☀️ ' + formatDate(todayKey);
@@ -855,16 +922,40 @@ window.renderAll = function() {
 
   if (localData.dayChanged) {
     document.getElementById('day-banner').style.display = 'block';
+    localData.dayChanged = false;
+    saveData();
+  } else {
+    // don't hide if already visible (user may not have dismissed yet)
+    if (document.getElementById('day-banner').style.display !== 'block')
+      document.getElementById('day-banner').style.display = 'none';
+  }
+
+  // #12: filter indicator
+  const filterIndicator = document.getElementById('filter-indicator');
+  if (currentFilter !== 'all' || q) {
+    const parts = [];
+    if (currentFilter !== 'all') parts.push('Filter: ' + currentFilter);
+    if (q) parts.push('Search: "' + q + '"');
+    filterIndicator.textContent = parts.join('  ·  ');
+    filterIndicator.classList.add('visible');
+  } else {
+    filterIndicator.classList.remove('visible');
   }
 
   const todayTasks = filterTasks(localData.days?.[todayKey]?.tasks || [], q);
   const tmrwTasks = filterTasks(localData.days?.[tomorrowKey]?.tasks || [], q);
 
-  renderSection('today', todayTasks, todayKey);
-  renderSection('tomorrow', tmrwTasks, tomorrowKey);
+  renderSection('today', todayTasks, todayKey, localData.days?.[todayKey]?.tasks || []);
+  renderSection('tomorrow', tmrwTasks, tomorrowKey, localData.days?.[tomorrowKey]?.tasks || []);
   renderPrevDays(todayKey, tomorrowKey, q);
   updateStats(todayKey);
   updateProgress(localData.days?.[todayKey]?.tasks || []);
+
+  // #15: restore focus
+  if (focusedId) {
+    const el = document.querySelector(`[data-task-id="${focusedId}"]`);
+    if (el) { el.focus(); placeCursorAtEnd(el); }
+  }
 };
 
 function filterTasks(tasks, q) {
@@ -894,12 +985,28 @@ function updateProgress(tasks) {
   document.getElementById('progress-text').textContent = done + ' / ' + total;
 }
 
-function renderSection(section, tasks, dayKey) {
+// #15: helper to restore cursor to end of contenteditable
+function placeCursorAtEnd(el) {
+  try {
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  } catch(e) {}
+}
+
+function renderSection(section, tasks, dayKey, allTasksForDay) {
   const container = document.getElementById(section + '-tasks');
   container.innerHTML = '';
 
   if (!tasks.length) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">✦</div>no tasks yet</div>`;
+    // #13: distinguish "no tasks at all" vs "filter matches nothing"
+    const hasAnyTasks = (allTasksForDay || []).length > 0;
+    const isFiltered = currentFilter !== 'all' || (document.getElementById('search-input')?.value || '').trim();
+    const msg = (hasAnyTasks && isFiltered) ? 'no matches for current filter' : 'no tasks yet';
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">✦</div>${msg}</div>`;
   }
 
   const sorted = [...tasks].sort((a,b) => {
@@ -908,15 +1015,20 @@ function renderSection(section, tasks, dayKey) {
     return (po[a.priority] ?? 3) - (po[b.priority] ?? 3);
   });
 
-  const todayKey = getDateKey(new Date());
-  const tomorrowKey = getDateKey(new Date(Date.now() + 86400000));
+  const _rNow = effectiveNow();
+  const todayKey = getDateKey(_rNow);
+  const tomorrowKey = getDateKey(new Date(_rNow.getTime() + 86400000));
 
   sorted.forEach(task => {
     const row = document.createElement('div');
     row.className = 'task-row';
 
-    const check = document.createElement('div');
+    // #35: use button for accessibility
+    const check = document.createElement('button');
     check.className = 'task-check' + (task.done ? ' checked' : '');
+    check.setAttribute('role', 'checkbox');
+    check.setAttribute('aria-checked', task.done ? 'true' : 'false');
+    check.setAttribute('aria-label', (task.done ? 'Uncheck' : 'Check') + ' task: ' + task.text);
     check.onclick = () => toggleDone(dayKey, task.id);
 
     const content = document.createElement('div');
@@ -927,8 +1039,25 @@ function renderSection(section, tasks, dayKey) {
     textEl.contentEditable = true;
     textEl.spellcheck = false;
     textEl.textContent = task.text;
-    textEl.onblur = () => { if (textEl.textContent.trim()) updateTaskText(dayKey, task.id, textEl.textContent.trim()); };
-    textEl.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); textEl.blur(); } };
+    textEl.dataset.taskId = task.id; // #15: for focus restoration
+    textEl.onblur = () => {
+      const v = textEl.textContent.replace(/\n/g, ' ').trim();
+      if (v) updateTaskText(dayKey, task.id, v);
+      else { textEl.textContent = task.text; } // #3: revert instead of silent no-op
+    };
+    textEl.oninput = () => {
+      const v = textEl.textContent;
+      if (v.trim()) updateTaskText(dayKey, task.id, v);
+    };
+    textEl.onkeydown = (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); textEl.blur(); } // #4: block Enter
+    };
+    // #4: strip newlines on paste
+    textEl.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\n/g, ' ');
+      document.execCommand('insertText', false, text);
+    });
     content.appendChild(textEl);
 
     const meta = document.createElement('div');
@@ -1008,8 +1137,9 @@ function renderPrevDays(todayKey, tomorrowKey, q) {
 
     const dot = document.createElement('div'); dot.className = 'dot dot-prev';
     const title = document.createElement('div'); title.className = 'section-title prev-title';
-    title.textContent = '✅ ' + formatDate(key);
     const done = tasks.filter(t => t.done).length;
+    const allDone = done === tasks.length && tasks.length > 0;
+    title.textContent = (allDone ? '✅' : '📋') + ' ' + formatDate(key);
     const badge = document.createElement('span'); badge.className = 'count-badge';
     badge.textContent = done + '/' + tasks.length;
     const icon = document.createElement('span'); icon.className = 'chevron'; icon.textContent = '▶';
@@ -1027,8 +1157,17 @@ function renderPrevDays(todayKey, tomorrowKey, q) {
       check.onclick = () => toggleDone(key, task.id);
       const text = document.createElement('div');
       text.className = 'task-text' + (task.done ? ' done' : '');
+      text.contentEditable = true;
+      text.spellcheck = false;
       text.textContent = task.text;
-      row.appendChild(check); row.appendChild(text);
+      text.onblur = () => { const v = text.textContent.trim(); if (v) updateTaskText(key, task.id, v); else text.textContent = task.text; };
+      text.oninput = () => { if (text.textContent.trim()) updateTaskText(key, task.id, text.textContent); };
+      text.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); text.blur(); } };
+      const del = document.createElement('button');
+      del.className = 'task-action-btn del';
+      del.title = 'Delete'; del.textContent = '×';
+      del.onclick = () => deleteTask(key, task.id);
+      row.appendChild(check); row.appendChild(text); row.appendChild(del);
       body.appendChild(row);
     });
 
@@ -1046,8 +1185,9 @@ window.toggleSection = function(name) {
 };
 
 window.addTask = function(section) {
-  const todayKey = getDateKey(new Date());
-  const tomorrowKey = getDateKey(new Date(Date.now() + 86400000));
+  const now = effectiveNow();
+  const todayKey = getDateKey(now);
+  const tomorrowKey = getDateKey(new Date(now.getTime() + 86400000));
   const key = section === 'today' ? todayKey : tomorrowKey;
   const input = document.getElementById(section + '-input');
   const text = input.value.trim();
@@ -1060,7 +1200,6 @@ window.addTask = function(section) {
   input.value = '';
   pendingPriority[section] = null;
   document.querySelectorAll(`#${section}-priority-row .prio-btn`).forEach(b => b.className = 'prio-btn');
-  document.querySelector(`#${section}-priority-row .prio-btn`).className = 'prio-btn active-none';
   renderAll();
   showToast('Task added ✓');
 };
@@ -1072,24 +1211,96 @@ window.handleKey = function(e, section) {
 function toggleDone(dayKey, taskId) {
   const tasks = localData.days?.[dayKey]?.tasks || [];
   const t = tasks.find(t => t.id === taskId);
-  if (t) { t.done = !t.done; if (t.done) t.carried = false; }
+  if (t) {
+    t.done = !t.done;
+    // Follow the full carry chain and sync done state to every ancestor
+    let cur = t;
+    while (cur.carried && cur.sourceDay && cur.sourceId) {
+      const srcTasks = localData.days?.[cur.sourceDay]?.tasks || [];
+      const src = srcTasks.find(s => s.id === cur.sourceId);
+      if (!src) break;
+      src.done = t.done;
+      cur = src; // follow chain upward
+    }
+  }
   saveData();
   renderAll();
   if (t?.done) showToast('Done! ✓');
 }
 
+// #26: undo delete support
+let _undoStack = null; // { dayKey, task, index }
+let _undoTimer = null;
+
 function deleteTask(dayKey, taskId) {
+  const tasks = localData.days?.[dayKey]?.tasks || [];
+  const idx = tasks.findIndex(t => t.id === taskId);
+  const task = tasks[idx];
+  // Follow the full carry chain and delete every ancestor
+  let cur = task;
+  let ancestorSnapshots = [];
+  while (cur?.carried && cur.sourceDay && cur.sourceId) {
+    const srcDay = localData.days?.[cur.sourceDay];
+    const src = srcDay?.tasks?.find(s => s.id === cur.sourceId);
+    if (srcDay) {
+      const srcIdx = srcDay.tasks.findIndex(s => s.id === cur.sourceId);
+      ancestorSnapshots.push({ dayKey: cur.sourceDay, task: { ...src }, index: srcIdx });
+      srcDay.tasks = srcDay.tasks.filter(t => t.id !== cur.sourceId);
+    }
+    cur = src;
+  }
   if (localData.days?.[dayKey]) {
     localData.days[dayKey].tasks = localData.days[dayKey].tasks.filter(t => t.id !== taskId);
   }
+  // Save undo state
+  _undoStack = { dayKey, task: { ...task }, index: idx, ancestors: ancestorSnapshots };
+  clearTimeout(_undoTimer);
+  _undoTimer = setTimeout(() => { _undoStack = null; }, 5000);
   saveData();
   renderAll();
-  showToast('Task removed');
+  showToastWithUndo('Task removed');
 }
 
+function showToastWithUndo(msg) {
+  const t = document.getElementById('toast');
+  t.innerHTML = msg + ' <span class="toast-action" onclick="undoDelete()">Undo</span>';
+  t.classList.add('show');
+  t.style.pointerEvents = 'auto';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.classList.remove('show'); t.style.pointerEvents = 'none'; }, 5000);
+}
+
+window.undoDelete = function() {
+  if (!_undoStack) return;
+  const { dayKey, task, index, ancestors } = _undoStack;
+  _undoStack = null;
+  clearTimeout(_undoTimer);
+  if (!localData.days[dayKey]) localData.days[dayKey] = { tasks: [] };
+  localData.days[dayKey].tasks.splice(index, 0, task);
+  // Restore ancestors in reverse order
+  ancestors.reverse().forEach(({ dayKey: dk, task: t, index: i }) => {
+    if (!localData.days[dk]) localData.days[dk] = { tasks: [] };
+    localData.days[dk].tasks.splice(i, 0, t);
+  });
+  saveData(); renderAll(); showToast('Restored ✓');
+};
+
+let _textSaveTimer = null;
 function updateTaskText(dayKey, taskId, newText) {
   const t = (localData.days?.[dayKey]?.tasks || []).find(t => t.id === taskId);
-  if (t) { t.text = newText; saveData(); }
+  if (t) {
+    t.text = newText;
+    // Follow the full carry chain and sync text to every ancestor
+    let cur = t;
+    while (cur.carried && cur.sourceDay && cur.sourceId) {
+      const src = (localData.days?.[cur.sourceDay]?.tasks || []).find(s => s.id === cur.sourceId);
+      if (!src) break;
+      src.text = newText;
+      cur = src;
+    }
+    clearTimeout(_textSaveTimer);
+    _textSaveTimer = setTimeout(saveData, 600);
+  }
 }
 
 function moveTask(fromKey, toKey, taskId) {
@@ -1098,7 +1309,9 @@ function moveTask(fromKey, toKey, taskId) {
   if (idx === -1) return;
   const [task] = fromTasks.splice(idx, 1);
   if (!localData.days[toKey]) localData.days[toKey] = { tasks: [] };
-  localData.days[toKey].tasks.push({ ...task, id: uid(), carried: false });
+  // Strip carried metadata — the task is now deliberately placed in the destination
+  const { sourceDay, sourceId, carried, ...rest } = task;
+  localData.days[toKey].tasks.push({ ...rest, carried: false }); // keep original id
   saveData();
   renderAll();
   showToast('Task moved ✓');
@@ -1118,6 +1331,13 @@ window.setFilter = function(val, el) {
   renderAll();
 };
 
+// #14: debounced search handler
+let _searchTimer = null;
+window.onSearchInput = function() {
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(renderAll, 150);
+};
+
 window.toggleSearch = function() {
   const wrap = document.getElementById('search-wrap');
   wrap.classList.toggle('visible');
@@ -1135,18 +1355,32 @@ window.closeSettings = function(e) {
     document.getElementById('settings-modal').classList.remove('open');
 };
 
+// #9: Escape closes modal; #28: keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.getElementById('settings-modal').classList.remove('open');
+    const sw = document.getElementById('search-wrap');
+    if (sw.classList.contains('visible')) toggleSearch();
+  }
+  // Don't fire shortcuts when typing in an input or contenteditable
+  const tag = document.activeElement?.tagName;
+  const ce = document.activeElement?.contentEditable === 'true';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || ce) return;
+  if (e.key === '/' || e.key === 'f') { e.preventDefault(); toggleSearch(); }
+  if (e.key === 'n') { e.preventDefault(); focusTodayInput(); }
+});
+
 window.clearDone = function() {
-  const todayKey = getDateKey(new Date());
-  const tomorrowKey = getDateKey(new Date(Date.now() + 86400000));
-  [todayKey, tomorrowKey].forEach(k => {
-    if (localData.days?.[k]) localData.days[k].tasks = localData.days[k].tasks.filter(t => !t.done);
+  Object.keys(localData.days || {}).forEach(k => {
+    if (localData.days[k]) localData.days[k].tasks = localData.days[k].tasks.filter(t => !t.done);
   });
   saveData(); closeSettings(); renderAll(); showToast('Done tasks cleared');
 };
 
 window.clearAllDays = function() {
-  const todayKey = getDateKey(new Date());
-  const tomorrowKey = getDateKey(new Date(Date.now() + 86400000));
+  const now = effectiveNow();
+  const todayKey = getDateKey(now);
+  const tomorrowKey = getDateKey(new Date(now.getTime() + 86400000));
   Object.keys(localData.days || {}).forEach(k => {
     if (k !== todayKey && k !== tomorrowKey) delete localData.days[k];
   });
@@ -1155,10 +1389,12 @@ window.clearAllDays = function() {
 
 window.exportData = function() {
   const blob = new Blob([JSON.stringify(localData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+  a.href = url;
   a.download = 'mind-todo-backup.json';
   a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000); // #17: free memory
   showToast('Exported ✓');
 };
 
@@ -1169,11 +1405,25 @@ window.importData = function(e) {
   const r = new FileReader();
   r.onload = ev => {
     try {
-      localData = JSON.parse(ev.target.result);
-      saveData(); closeSettings(); renderAll(); showToast('Imported ✓');
-    } catch { showToast('Invalid file'); }
+      const parsed = JSON.parse(ev.target.result);
+      // #16: validate shape before overwriting
+      if (!parsed || typeof parsed !== 'object' || !parsed.days || typeof parsed.days !== 'object') {
+        showToast('Invalid backup — missing days data'); return;
+      }
+      localData = parsed;
+      saveData();
+      rolloverDone = false;
+      runDayRollover();
+      closeSettings(); renderAll(); showToast('Imported ✓');
+    } catch { showToast('Invalid JSON file'); }
   };
   r.readAsText(file);
+  e.target.value = ''; // reset so same file can be re-imported
+};
+
+// #22: manually dismiss the new-day banner
+window.dismissBanner = function() {
+  document.getElementById('day-banner').style.display = 'none';
 };
 
 window.focusTodayInput = function() {
@@ -1184,23 +1434,41 @@ window.focusTodayInput = function() {
 };
 
 function updateClock() {
-  const now = new Date();
+  const now = new Date(); // always real time for clock
+  const effective = effectiveNow();
   const time = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-  const date = now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  const date = effective.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
   const el = document.getElementById('clock-display');
-  if (el) el.textContent = date + '  ·  ' + time;
+  const overrideSuffix = _dateOverride ? ' 🧪' : '';
+  if (el) el.textContent = date + '  ·  ' + time + overrideSuffix;
 }
 
+// ── DATE OVERRIDE ──
+window.applyDateOverride = function() {
+  const val = document.getElementById('date-override-input').value;
+  if (!val) { showToast('Pick a date first'); return; }
+  _dateOverride = val;
+  document.getElementById('date-override-status').textContent = '→ ' + val;
+  document.getElementById('date-override-bar').classList.add('date-override-active');
+  rolloverDone = false;
+  runDayRollover();
+  renderAll();
+  showToast('Date set to ' + val);
+};
+
+window.resetDateOverride = function() {
+  _dateOverride = null;
+  document.getElementById('date-override-input').value = '';
+  document.getElementById('date-override-status').textContent = '';
+  document.getElementById('date-override-bar').classList.remove('date-override-active');
+  rolloverDone = false;
+  runDayRollover();
+  renderAll();
+  showToast('Back to real today');
+};
+
 // ── INIT ──
-const savedUsername = localStorage.getItem('todo_mind_username');
-if (savedUsername) {
-  initUser(savedUsername);
-} else {
-  // Show setup
-  document.getElementById('setup-username').addEventListener('keydown', e => {
-    if (e.key === 'Enter') startWithUsername();
-  });
-}
+initApp();
 </script>
 </body>
 </html>
