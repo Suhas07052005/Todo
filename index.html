@@ -617,7 +617,7 @@ body {
   color: var(--priority-med);
   flex-shrink: 0;
 }
-.date-override-active .date-override-bar {
+.date-override-bar.date-override-active {
   background: rgba(240,200,106,0.13);
   border-color: rgba(240,200,106,0.4);
 }
@@ -776,8 +776,9 @@ const LS_KEY = 'mind_todo_local_data';
 let localData = {};
 let currentFilter = 'all';
 let pendingPriority = { today: null, tomorrow: null };
-// Date override for testing — null means use real Date
-let _dateOverride = null;
+const LS_DATE_OVERRIDE = 'mind_todo_date_override';
+// Restore override from localStorage on load
+let _dateOverride = localStorage.getItem(LS_DATE_OVERRIDE) || null;
 // rollover guard
 let rolloverDone = false;
 
@@ -816,6 +817,13 @@ function initApp() {
   renderAll();
   updateClock();
   setInterval(updateClock, 30000);
+  // Restore date override UI if one was persisted
+  if (_dateOverride) {
+    const inp = document.getElementById('date-override-input');
+    inp.value = _dateOverride;
+    document.getElementById('date-override-status').textContent = '→ ' + _dateOverride;
+    document.getElementById('date-override-bar').classList.add('date-override-active');
+  }
 }
 
 // ── USER SETUP ──
@@ -1448,6 +1456,7 @@ window.applyDateOverride = function() {
   const val = document.getElementById('date-override-input').value;
   if (!val) { showToast('Pick a date first'); return; }
   _dateOverride = val;
+  localStorage.setItem(LS_DATE_OVERRIDE, val); // persist across reloads
   document.getElementById('date-override-status').textContent = '→ ' + val;
   document.getElementById('date-override-bar').classList.add('date-override-active');
   rolloverDone = false;
@@ -1458,6 +1467,7 @@ window.applyDateOverride = function() {
 
 window.resetDateOverride = function() {
   _dateOverride = null;
+  localStorage.removeItem(LS_DATE_OVERRIDE); // clear persisted override
   document.getElementById('date-override-input').value = '';
   document.getElementById('date-override-status').textContent = '';
   document.getElementById('date-override-bar').classList.remove('date-override-active');
