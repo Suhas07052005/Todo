@@ -769,6 +769,14 @@ body {
 </div><!-- /app -->
 
 <script>
+// ── SAFE STORAGE (falls back to in-memory when localStorage is blocked e.g. Notion mobile WebView) ──
+const _memStore = {};
+const storage = {
+  getItem(k)    { try { return storage.getItem(k); }    catch(e) { return _memStore[k] ?? null; } },
+  setItem(k, v) { try { storage.setItem(k, v); }        catch(e) { _memStore[k] = String(v); } },
+  removeItem(k) { try { storage.removeItem(k); }        catch(e) { delete _memStore[k]; } }
+};
+
 // ── LOCAL STORAGE ONLY (Firebase removed for testing) ──
 const LS_KEY = 'mind_todo_local_data';
 
@@ -778,7 +786,7 @@ let currentFilter = 'all';
 let pendingPriority = { today: null, tomorrow: null };
 const LS_DATE_OVERRIDE = 'mind_todo_date_override';
 // Restore override from localStorage on load
-let _dateOverride = localStorage.getItem(LS_DATE_OVERRIDE) || null;
+let _dateOverride = storage.getItem(LS_DATE_OVERRIDE) || null;
 // rollover guard
 let rolloverDone = false;
 
@@ -800,10 +808,10 @@ function showToast(msg, duration = 2000) {
 }
 // ── SAVE / LOAD (localStorage) ──
 function saveData() {
-  localStorage.setItem(LS_KEY, JSON.stringify(localData));
+  storage.setItem(LS_KEY, JSON.stringify(localData));
 }
 function loadData() {
-  const raw = localStorage.getItem(LS_KEY);
+  const raw = storage.getItem(LS_KEY);
   return raw ? JSON.parse(raw) : null;
 }
 
@@ -1456,7 +1464,7 @@ window.applyDateOverride = function() {
   const val = document.getElementById('date-override-input').value;
   if (!val) { showToast('Pick a date first'); return; }
   _dateOverride = val;
-  localStorage.setItem(LS_DATE_OVERRIDE, val); // persist across reloads
+  storage.setItem(LS_DATE_OVERRIDE, val); // persist across reloads
   document.getElementById('date-override-status').textContent = '→ ' + val;
   document.getElementById('date-override-bar').classList.add('date-override-active');
   rolloverDone = false;
@@ -1467,7 +1475,7 @@ window.applyDateOverride = function() {
 
 window.resetDateOverride = function() {
   _dateOverride = null;
-  localStorage.removeItem(LS_DATE_OVERRIDE); // clear persisted override
+  storage.removeItem(LS_DATE_OVERRIDE); // clear persisted override
   document.getElementById('date-override-input').value = '';
   document.getElementById('date-override-status').textContent = '';
   document.getElementById('date-override-bar').classList.remove('date-override-active');
