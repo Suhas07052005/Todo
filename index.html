@@ -593,7 +593,7 @@ function initUser(username) {
 
   const docRef = db.collection('users').doc(username);
   unsubscribe = docRef.onSnapshot( (snap) => {
-    if (snap.exists()) {
+    if (snap.exists) {
       try { localData = JSON.parse(snap.data().data || '{}'); } catch(e) { localData = buildDefaultData(); }
       if (!localData.days) localData = buildDefaultData();
     } else {
